@@ -13,3 +13,4 @@ max_persistent_conns: 512
 servers: 3
 daemonize: true
 chdir: /opt/mail2miniblog
+rackup: config.ru
