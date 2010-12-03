@@ -1,3 +1,10 @@
+#! /usr/bin/ruby
+#author newdongyuwei@gmail.com
+
+if GC.respond_to?(:copy_on_write_friendly=)
+   GC.copy_on_write_friendly = true
+end
+
 require 'rubygems'   
 require "sinatra"  
 require  'oauth'
