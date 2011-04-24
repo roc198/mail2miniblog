@@ -45,9 +45,8 @@ class Mail2MiniBlog  <  Sinatra::Base
         session[:request_token] = request_token.token 
         session[:request_token_secret] = request_token.secret 
 	    href = request_token.authorize_url + "&oauth_callback=" + CGI.escape("http://session.im/callback")
-	    'To bind your email,please send an email to v@session.im;<br>
-	    After your mail verified, to publish a sina weibo(miniblog),U can just send an email to t@session.im
-	    <br>First please visit <a href="' + href + '" title="mail2miniblog">mail2sina miniblog(weibo)</a>'
+	    '邮件发微博:
+	    <br>授权<a href="' + href + '" title="mail2miniblog">邮件发(SINA)微博</a>'
     end
 
     get '/callback' do
@@ -216,9 +215,6 @@ EM.run do
                 end    
             rescue Exception=>e
                 loger.error(e.to_str)
-                file = File.open(File.join(File.dirname(__FILE__),'sub.error'),'w')
-                file.puts(e.to_str)
-                file.close
             end
         end
     end

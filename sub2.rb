@@ -7,31 +7,23 @@ require "cgi"
 require 'uri'
 require "tmail"
 require "yaml"
-require 'net/http'
-require 'net/http/post/multipart'
+require 'weibo'
+require 'logger'
 
 redis = Redis.new(:thread_safe=>true)
 
 trap(:INT) { puts; exit }
 
-def new_consumer(api_key='1869125062', api_key_secret='d128d7a473c7a06ba0b84284a24c7924')
-    return OAuth::Consumer.new(api_key, api_key_secret ,
-        {
-          :site=>"http://api.t.sina.com.cn",
-          :request_token_path=>"/oauth/request_token",
-          :access_token_path=>"/oauth/access_token",
-          :authorize_path=>"/oauth/authorize",
-          :signature_method=>"HMAC-SHA1",
-          :scheme=>:header,
-          :realm=>"http://session.im"
-        }
-     )
-end
+Weibo::Config.api_key = "1869125062"
+Weibo::Config.api_secret = "d128d7a473c7a06ba0b84284a24c7924"
+
+loger = Logger.new(File.join(File.dirname(__FILE__),'sub2.log'))
+loger.level = Logger::DEBUG
 
 def part_filename(part)
     file_name = (part['content-location'] &&part['content-location'].body) ||
     part.sub_header("content-type", "name") ||part.sub_header("content-disposition", "filename")
-    return file_name.strip
+    file_name.strip
 end
 
 def get_mail_body_and_attachment(mail)
@@ -59,56 +51,24 @@ def get_mail_body_and_attachment(mail)
         body = mail.body
     end
     body = body.slice(0,420).strip#140*3
-    p body
     return {'body' => body,'attachment' => attachment}
 end
 
-def update_status(token,status)
+def publish_pic_and_status(token,status,attachment)
     arr = token.split("&")
-    access_token = OAuth::AccessToken.new(new_consumer(),arr[0],arr[1])
-    if access_token
-            	access_token.post("http://api.t.sina.com.cn/statuses/update.json",{"status" => CGI.escape(status) })
+    oauth = Weibo::OAuth.new(Weibo::Config.api_key, Weibo::Config.api_secret)
+    oauth.authorize_from_access(arr[0], arr[1])
+    file = File.open(attachment,'r')
+    if File.exists? attachment
+        begin
+            Weibo::Base.new(oauth).upload(status, File.open(attachment,'r'))
+        rescue Exception=>e
+            loger.error(e.to_str)
+        end
+        File.delete attachment
+    else
+        Weibo::Base.new(oauth).update(status)
     end
-end
-
-#borrow from http://bitbucket.org/dropboxapi/dropbox-client-ruby/src/b7118ab96791/lib/dropbox.rb
-def sign(request,consumer,access_token, request_options = {})
-    consumer.sign!(request, access_token, request_options)
-end
-
-def publish_pic_and_status(token,status,file_obj)
-    arr = token.split("&")
-    consumer = new_consumer()
-    access_token  = OAuth::AccessToken.new(consumer ,arr[0],arr[1])
-    url = URI.parse('http://api.t.sina.com.cn/statuses/upload.json')
-    name = "pic"
-    oauth_fake_req = Net::HTTP::Post.new(url.path)
-    oauth_fake_req.set_form_data({ "file" => name,"status"=>CGI.escape(status) })
-    sign(oauth_fake_req,consumer,access_token, {
-          :site=>"http://api.t.sina.com.cn",
-          :request_token_path=>"/oauth/request_token",
-          :access_token_path=>"/oauth/access_token",
-          :authorize_path=>"/oauth/authorize",
-          :signature_method=>"HMAC-SHA1",
-          :scheme=>:header,
-          :realm=>"http://session.im"
-        })
-    oauth_sig = oauth_fake_req.to_hash['authorization']
-
-    req = Net::HTTP::Post::Multipart.new(url.path, {
-        "file" => UploadIO.convert!(file_obj, 
-                    "application/octet-stream", name, name),
-    })
-    puts "oauth_sig #{oauth_sig}"
-    req['authorization'] = oauth_sig.join(", ")
-    puts '-----------------------------------------------'
-    puts req['authorization'] 
-    res = Net::HTTP.start(url.host, url.port) do |http|
-        puts '++++++++++++++++++++++++++++'
-        puts http.request(req)
-    end
-    puts '-------------end------------------------------'
-    puts res
 end
 
 redis.subscribe(:verify,:email) do |on|
@@ -128,19 +88,16 @@ redis.subscribe(:verify,:email) do |on|
 		            if not token
                         		redis2.set(mail.from[0],body) 
 		            end
-                    else#channel is 'email',meaning to publish miniblog
+                    else
                         if token
-                            #update_status(token,body)
                             publish_pic_and_status(token,body,attachment)
                         end
                 end
             else
-                puts "error when TMail::Mail.parse "
+                loger.error("error when TMail::Mail.parse ")
             end    
         rescue Exception=>e
-            file = File.open("/opt/hg/mail2miniblog/sub.error","w")
-            file.puts(e.to_str)
-            file.close
+            loger.error(e.to_str)
         end
     end
 end
