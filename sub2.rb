@@ -58,17 +58,17 @@ def publish_pic_and_status(token,status,attachment)
     arr = token.split("&")
     oauth = Weibo::OAuth.new(Weibo::Config.api_key, Weibo::Config.api_secret)
     oauth.authorize_from_access(arr[0], arr[1])
-    file = File.open(attachment,'r')
-    if File.exists? attachment
-        begin
+	if attachment and File.exists? attachment
+		file = File.open(attachment,'r')
+		begin
             Weibo::Base.new(oauth).upload(status, File.open(attachment,'r'))
         rescue Exception=>e
             puts e.to_str
         end
         File.delete attachment
-    else
-        Weibo::Base.new(oauth).update(status)
-    end
+	else
+		Weibo::Base.new(oauth).update(status)
+	end 
 end
 
 redis.subscribe(:verify,:email) do |on|
