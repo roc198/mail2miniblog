@@ -37,13 +37,15 @@ def get_mail_body_and_attachment(mail)
             end
             if part.transfer_encoding  == "base64" and attachment.length == 0# just parse first attachment
                 filename = part_filename(part)
-                part.base64_decode
-                filepath = File.join(File.dirname(__FILE__) ,  filename)
-                puts filepath
-                attachment << filepath
-                File.open(filepath,File::CREAT|File::TRUNC|File::WRONLY,0644){ |f|
-                    f.write(part.body)
-                }
+                if filename != ""
+                  part.base64_decode
+                  filepath = File.join(File.dirname(__FILE__) ,  filename)
+                  puts filepath
+                  attachment << filepath
+                  File.open(filepath,File::CREAT|File::TRUNC|File::WRONLY,0644){ |f|
+                      f.write(part.body)
+                  }
+                end
             end
         end
     else
