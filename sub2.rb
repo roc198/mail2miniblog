@@ -21,8 +21,7 @@ loger = Logger.new(File.join(File.dirname(__FILE__),'sub2.log'))
 loger.level = Logger::DEBUG
 
 def part_filename(part)
-    file_name = (part['content-location'] &&part['content-location'].body) ||
-    part.sub_header("content-type", "name") ||part.sub_header("content-disposition", "filename")
+    file_name = (part['content-location'] &&part['content-location'].body) || part.sub_header("content-type", "name") ||part.sub_header("content-disposition", "filename")||""
     file_name.strip
 end
 
