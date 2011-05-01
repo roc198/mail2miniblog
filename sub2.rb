@@ -63,7 +63,7 @@ def publish_pic_and_status(token,status,attachment)
         begin
             Weibo::Base.new(oauth).upload(status, File.open(attachment,'r'))
         rescue Exception=>e
-            loger.error(e.to_str)
+            puts e.to_str
         end
         File.delete attachment
     else
@@ -94,10 +94,10 @@ redis.subscribe(:verify,:email) do |on|
                         end
                 end
             else
-                loger.error("error when TMail::Mail.parse ")
+                puts "error when TMail::Mail.parse "
             end    
         rescue Exception=>e
-            loger.error(e.to_str)
+            puts e.to_str
         end
     end
 end
