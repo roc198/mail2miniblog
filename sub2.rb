@@ -22,7 +22,16 @@ loger.level = Logger::DEBUG
 
 def parse_mail(mail,data)
         if mail.multipart?
-            data[:attachment] =  mail.attachments.first if mail.has_attachments?
+            if mail.has_attachments?
+                attachment = mail.attachments.first
+                name = attachment.original_filename or '.attachment'
+                File.open(name,"w+") { |f|
+                    f attachment.gets(nil)
+                }
+                
+                data[:attachment] =  name
+            end
+
             mail.parts.each do |m|
                 m.base64_decode
                 if m.multipart?
@@ -49,12 +58,13 @@ def publish_pic_and_status(token,status,attachment)
     arr = token.split("&")
     oauth = Weibo::OAuth.new(Weibo::Config.api_key, Weibo::Config.api_secret)
     oauth.authorize_from_access(arr[0], arr[1])
-	if attachment
+	if attachment and (File.exists? attachment)
 		begin
-            Weibo::Base.new(oauth).upload(status, attachment)
+            Weibo::Base.new(oauth).upload(status, File.open(attachment,'r'))
         rescue Exception=>e
             puts e.to_str
         end
+        File.delete attachment
 	else
 		Weibo::Base.new(oauth).update(status)
 	end 
