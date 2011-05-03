@@ -68,8 +68,8 @@ redis.subscribe(:verify,:email) do |on|
             mail = TMail::Mail.parse(message)
             if mail
                 body_attachment = get_mail_body_and_attachment(mail)
-                body = body_attachment['body']
-                attachment = body_attachment['attachment']
+                body = body_attachment[:body]
+                attachment = body_attachment[:attachment]
                 redis2 = Redis.connect
                 token = redis2.get(mail.from[0])
                 puts "token: #{token}"
