@@ -20,53 +20,41 @@ Weibo::Config.api_secret = "d128d7a473c7a06ba0b84284a24c7924"
 loger = Logger.new(File.join(File.dirname(__FILE__),'sub2.log'))
 loger.level = Logger::DEBUG
 
-def part_filename(part)
-    file_name = (part['content-location'] &&part['content-location'].body) || part.sub_header("content-type", "name") ||part.sub_header("content-disposition", "filename")||""
-    file_name.strip
+def parse_mail(mail,data)
+        if mail.multipart?
+            data[:attachment] =  mail.attachments.first if mail.has_attachments?
+            mail.parts.each do |m|
+                m.base64_decode
+                if m.multipart?
+                    parse_mail(m,data)
+                else
+                    if m.content_type == 'text/plain'
+                        data[:body] = m.body
+                    end
+                end
+            end
+        else
+            data[:body] = mail.body
+        end
 end
 
 def get_mail_body_and_attachment(mail)
-    puts mail
-    p mail.to,mail.from
-    body = ''
-    attachment = []
-    if mail.multipart? 
-        mail.parts.each do |part|
-            if part.content_type == "text/plain"
-                body = part.body
-            end
-            if part.transfer_encoding  == "base64" and attachment.length == 0# just parse first attachment
-                filename = part_filename(part)
-                if filename != ""
-                  part.base64_decode
-                  filepath = File.join(File.dirname(__FILE__) ,  filename)
-                  puts filepath
-                  attachment << filepath
-                  File.open(filepath,File::CREAT|File::TRUNC|File::WRONLY,0644){ |f|
-                      f.write(part.body)
-                  }
-                end
-            end
-        end
-    else
-        body = mail.body
-    end
-    body = body.slice(0,420).strip#140*3
-    return {'body' => body,'attachment' => attachment}
+    data = {}
+    parse_mail(mail,data)
+    data[:body] = data[:body].slice(0,280).strip#140*2
+    return data
 end
 
 def publish_pic_and_status(token,status,attachment)
     arr = token.split("&")
     oauth = Weibo::OAuth.new(Weibo::Config.api_key, Weibo::Config.api_secret)
     oauth.authorize_from_access(arr[0], arr[1])
-	if attachment and File.exists? attachment
-		file = File.open(attachment,'r')
+	if attachment
 		begin
-            Weibo::Base.new(oauth).upload(status, File.open(attachment,'r'))
+            Weibo::Base.new(oauth).upload(status, attachment)
         rescue Exception=>e
             puts e.to_str
         end
-        File.delete attachment
 	else
 		Weibo::Base.new(oauth).update(status)
 	end 
@@ -81,7 +69,7 @@ redis.subscribe(:verify,:email) do |on|
             if mail
                 body_attachment = get_mail_body_and_attachment(mail)
                 body = body_attachment['body']
-                attachment = body_attachment['attachment'][0]
+                attachment = body_attachment['attachment']
                 redis2 = Redis.connect
                 token = redis2.get(mail.from[0])
                 puts "token: #{token}"
