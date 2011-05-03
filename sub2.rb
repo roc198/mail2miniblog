@@ -26,7 +26,7 @@ def parse_mail(mail,data)
                 attachment = mail.attachments.first
                 name = attachment.original_filename or '.attachment'
                 File.open(name,"w+") { |f|
-                    f attachment.gets(nil)
+                    f << attachment.gets(nil)
                 }
                 
                 data[:attachment] =  name
