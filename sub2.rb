@@ -50,6 +50,7 @@ end
 def get_mail_body_and_attachment(mail)
     data = {}
     parse_mail(mail,data)
+    data[:body] = data[:body] || ""
     data[:body] = data[:body].slice(0,280).strip#140*2
     return data
 end
