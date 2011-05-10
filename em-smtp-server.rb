@@ -31,7 +31,7 @@ class EmailServer < EM::P::SmtpServer
             return true
         end
 
-        if rec == "t@#session.im" or rec == "v@session.im"
+        if rec == "t@session.im" or rec == "v@session.im"
             return true
         else
             return false
@@ -45,7 +45,8 @@ class EmailServer < EM::P::SmtpServer
         redis = Redis.connect
         if current.recipient.strip.index("t@session.im")
             redis.publish(:email,current.data)
-        else
+        end
+        if current.recipient.strip.index("v@session.im")
             redis.publish(:verify,current.data)
         end
         @current = OpenStruct.new
