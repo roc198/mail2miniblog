@@ -10,6 +10,7 @@ require "yaml"
 require 'weibo'
 require 'logger'
 require 'haml'
+require 'pony'
 
 redis = Redis.new(:thread_safe=>true)
 
@@ -78,13 +79,18 @@ def publish_pic_and_status(token,status,attachment)
     end
 end
 
-def friends_timeline token
+def send_mail to,subject,body
+    Pony.mail(:to => to, :from => 'weibo@session.im', :subject => subject, :body => body,:tls => true)
+end
+
+def friends_timeline token,to
     if token
         arr = token.split("&")
         oauth = Weibo::OAuth.new(Weibo::Config.api_key, Weibo::Config.api_secret)
         oauth.authorize_from_access(arr[0], arr[1])
         @timeline = Weibo::Base.new(oauth).friends_timeline
-        Haml::Engine.new(File.read("./views/friends_timeline.haml")).render(self)
+        body = Haml::Engine.new(File.read("./views/friends_timeline.haml")).render(self)
+        send_mail(to,"weibo friends timeline",body)
     end
 end
 
@@ -97,7 +103,7 @@ redis.subscribe(:verify,:email,:friends_timeline) do |on|
         puts "token: #{token}"
                 
         if channel == 'friends_timeline'
-            friends_timeline(token)
+            friends_timeline(token,message)
             return
         end
         
