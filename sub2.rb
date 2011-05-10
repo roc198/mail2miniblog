@@ -89,35 +89,40 @@ def friends_timeline token,to
         oauth = Weibo::OAuth.new(Weibo::Config.api_key, Weibo::Config.api_secret)
         oauth.authorize_from_access(arr[0], arr[1])
         @timeline = Weibo::Base.new(oauth).friends_timeline
-        body = Haml::Engine.new(File.read("./views/friends_timeline.haml")).render(self)
-        send_mail(to,"weibo friends timeline",body)
+        begin
+             body = Haml::Engine.new(File.read("./views/friends_timeline.haml")).render(self)
+             send_mail(to,"weibo friends timeline",body)
+        rescue Exception=>e
+            puts e.to_str
+        end 
     end
 end
 
 redis.subscribe(:verify,:email,:friends_timeline) do |on|
     on.message do |channel, message|
-        puts channel
-        
-        redis2 = Redis.connect
-        token = redis2.get(mail.from[0])
-        puts "token: #{token}"
-                
-        if channel == 'friends_timeline'
-            friends_timeline(token,message)
-            return
-        end
-        
+        puts channel    
         begin
             mail = TMail::Mail.parse(message)
+            redis2 = Redis.connect
+            token = redis2.get(mail.from[0])
+            puts "token: #{token}"
+
             if mail
                 body_attachment = get_mail_body_and_attachment(mail)
                 body = body_attachment[:body]
                 attachment = body_attachment[:attachment]
+
+                if channel == 'friends_timeline'
+                    friends_timeline(token,message)
+                    return
+                end
+
                 if channel == 'verify'
                     if not token
                         redis2.set(mail.from[0],body) 
                     end
                 end
+
                 if channel == 'email'
                     publish_pic_and_status(token,body,attachment)
                 end
