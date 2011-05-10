@@ -103,35 +103,34 @@ redis.subscribe(:verify,:email,:friends_timeline) do |on|
         puts channel    
         if channel == 'friends_timeline'
             friends_timeline(Redis.connect.get(message),message)
-            return
-        end
+        else
+            begin
+                mail = TMail::Mail.parse(message)
+                redis2 = Redis.connect
+                token = redis2.get(mail.from[0])
+                puts "token: #{token}"
 
-        begin
-            mail = TMail::Mail.parse(message)
-            redis2 = Redis.connect
-            token = redis2.get(mail.from[0])
-            puts "token: #{token}"
+                if mail
+                    body_attachment = get_mail_body_and_attachment(mail)
+                    body = body_attachment[:body]
+                    attachment = body_attachment[:attachment]
 
-            if mail
-                body_attachment = get_mail_body_and_attachment(mail)
-                body = body_attachment[:body]
-                attachment = body_attachment[:attachment]
-
-                
-                if channel == 'verify'
-                    if not token
-                        redis2.set(mail.from[0],body) 
+                    
+                    if channel == 'verify'
+                        if not token
+                            redis2.set(mail.from[0],body) 
+                        end
                     end
-                end
 
-                if channel == 'email'
-                    publish_pic_and_status(token,body,attachment)
-                end
-            else
-                puts "error when TMail::Mail.parse "
-            end    
-        rescue Exception=>e
-            puts e.to_str
+                    if channel == 'email'
+                        publish_pic_and_status(token,body,attachment)
+                    end
+                else
+                    puts "error when TMail::Mail.parse "
+                end    
+            rescue Exception=>e
+                puts e.to_str
+            end
         end
     end
 end
