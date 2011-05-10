@@ -101,6 +101,11 @@ end
 redis.subscribe(:verify,:email,:friends_timeline) do |on|
     on.message do |channel, message|
         puts channel    
+        if channel == 'friends_timeline'
+            friends_timeline(Redis.connect.get(message),message)
+            return
+        end
+
         begin
             mail = TMail::Mail.parse(message)
             redis2 = Redis.connect
@@ -112,11 +117,7 @@ redis.subscribe(:verify,:email,:friends_timeline) do |on|
                 body = body_attachment[:body]
                 attachment = body_attachment[:attachment]
 
-                if channel == 'friends_timeline'
-                    friends_timeline(token,message)
-                    return
-                end
-
+                
                 if channel == 'verify'
                     if not token
                         redis2.set(mail.from[0],body) 
