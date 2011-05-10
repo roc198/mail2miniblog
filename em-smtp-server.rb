@@ -25,12 +25,12 @@ class EmailServer < EM::P::SmtpServer
 
     def receive_recipient(recipient)
         rec = recipient.strip.sub("<","").sub(">","")
-        if rec == "l@#{@host}" or rec == "friends_timeline@#{@host}"
+        if rec == "l@session.im" or rec == "friends_timeline@session.im"
             Redis.connect.publish(:friends_timeline,current.sender.strip.sub("<","").sub(">",""))
             return true
         end
 
-        if rec == "t@#{@host}" or rec == "v@#{@host}"
+        if rec == "t@#session.im" or rec == "v@session.im"
             current.recipient = recipient
             return true
         else
@@ -43,7 +43,7 @@ class EmailServer < EM::P::SmtpServer
         current.completed_at = Time.now
         p [:received_email, current]
         redis = Redis.connect
-        if current.recipient.strip.index("t@#{@host}")
+        if current.recipient.strip.index("t@session.im")
             redis.publish(:email,current.data)
         else
             redis.publish(:verify,current.data)
