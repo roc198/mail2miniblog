@@ -25,14 +25,16 @@ class EmailServer < EM::P::SmtpServer
 
     def receive_recipient(recipient)
         rec = recipient.strip.sub("<","").sub(">","")
+        if rec == "l@#{@host}" or rec == "friends_timeline@#{@host}"
+            Redis.connect.publish(:friends_timeline,current.sender.strip.sub("<","").sub(">",""))
+            return true
+        end
+
         if rec == "t@#{@host}" or rec == "v@#{@host}"
             current.recipient = recipient
-            true
+            return true
         else
-            if rec == "l@#{@host}" or rec == "friends_timeline@#{@host}"
-                Redis.connect.publish(:friends_timeline,current.sender.strip.sub("<","").sub(">",""))
-            end
-            false
+            return false
         end
     end
 
