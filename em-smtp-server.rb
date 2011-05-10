@@ -15,7 +15,7 @@ class EmailServer < EM::P::SmtpServer
     end
 
     def get_server_greeting
-        "#{@host} smtp server greets you with impunity"
+        "#{@host} smtp server"
     end
 
     def receive_sender(sender)
@@ -24,13 +24,16 @@ class EmailServer < EM::P::SmtpServer
     end
 
     def receive_recipient(recipient)
-        puts recipient
-	if recipient.strip.index("t@session.im") or recipient.strip.index("v@session.im")
-        	current.recipient = recipient
-		true
-	else
-		false
-	end
+        rec = ﻿recipient.strip.sub("<","").sub(">","")
+        if rec == "t@#{@host}" or rec == "v@#{@host}"
+            current.recipient = recipient
+            true
+        else
+            if rec == "l@#{@host}" or rec == "friends_timeline@#{@host}"
+                Redis.connect.publish(:friends_timeline,current.sender.strip.sub("<","").sub(">",""))
+            end
+            false
+        end
     end
 
     def receive_message
@@ -38,11 +41,11 @@ class EmailServer < EM::P::SmtpServer
         current.completed_at = Time.now
         p [:received_email, current]
         redis = Redis.connect
-	if current.recipient.strip.index 't@session.im'
-        	redis.publish(:email,current.data)
-	else
-        	redis.publish(:verify,current.data)
-	end
+        if current.recipient.strip.index("t@#{@host}")
+            redis.publish(:email,current.data)
+        else
+            redis.publish(:verify,current.data)
+        end
         @current = OpenStruct.new
         true
     end

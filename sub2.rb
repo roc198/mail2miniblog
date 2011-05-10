@@ -9,6 +9,7 @@ require "tmail"
 require "yaml"
 require 'weibo'
 require 'logger'
+require 'haml'
 
 redis = Redis.new(:thread_safe=>true)
 
@@ -56,42 +57,63 @@ def get_mail_body_and_attachment(mail)
 end
 
 def publish_pic_and_status(token,status,attachment)
-    arr = token.split("&")
-    oauth = Weibo::OAuth.new(Weibo::Config.api_key, Weibo::Config.api_secret)
-    oauth.authorize_from_access(arr[0], arr[1])
-	if attachment and (File.exists? attachment)
-		begin
-            Weibo::Base.new(oauth).upload(status, File.open(attachment,'r'))
-        rescue Exception=>e
-            puts e.to_str
-        end
-        File.delete attachment
-	else
-		Weibo::Base.new(oauth).update(status)
-	end 
+    if token
+        arr = token.split("&")
+        oauth = Weibo::OAuth.new(Weibo::Config.api_key, Weibo::Config.api_secret)
+        oauth.authorize_from_access(arr[0], arr[1])
+        if attachment and (File.exists? attachment)
+            begin
+                Weibo::Base.new(oauth).upload(status, File.open(attachment,'r'))
+            rescue Exception=>e
+                puts e.to_str
+            end
+            File.delete attachment
+        else
+            begin
+                Weibo::Base.new(oauth).update(status)
+            rescue Exception=>e
+                puts e.to_str
+            end
+        end 
+    end
 end
 
-redis.subscribe(:verify,:email) do |on|
+def friends_timeline token
+    if token
+        arr = token.split("&")
+        oauth = Weibo::OAuth.new(Weibo::Config.api_key, Weibo::Config.api_secret)
+        oauth.authorize_from_access(arr[0], arr[1])
+        @timeline = Weibo::Base.new(oauth).friends_timeline
+        Haml::Engine.new(File.read("./views/friends_timeline.haml")).render(self)
+    end
+end
+
+redis.subscribe(:verify,:email,:friends_timeline) do |on|
     on.message do |channel, message|
         puts channel
-        puts message
+        
+        redis2 = Redis.connect
+        token = redis2.get(mail.from[0])
+        puts "token: #{token}"
+                
+        if channel == 'friends_timeline'
+            friends_timeline(token)
+            return
+        end
+        
         begin
             mail = TMail::Mail.parse(message)
             if mail
                 body_attachment = get_mail_body_and_attachment(mail)
                 body = body_attachment[:body]
                 attachment = body_attachment[:attachment]
-                redis2 = Redis.connect
-                token = redis2.get(mail.from[0])
-                puts "token: #{token}"
                 if channel == 'verify'
-		            if not token
-                        		redis2.set(mail.from[0],body) 
-		            end
-                    else
-                        if token
-                            publish_pic_and_status(token,body,attachment)
-                        end
+                    if not token
+                        redis2.set(mail.from[0],body) 
+                    end
+                end
+                if channel == 'email'
+                    publish_pic_and_status(token,body,attachment)
                 end
             else
                 puts "error when TMail::Mail.parse "
