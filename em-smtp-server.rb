@@ -24,7 +24,7 @@ class EmailServer < EM::P::SmtpServer
     end
 
     def receive_recipient(recipient)
-        rec = ﻿recipient.strip.sub("<","").sub(">","")
+        rec = recipient.strip.sub("<","").sub(">","")
         if rec == "t@#{@host}" or rec == "v@#{@host}"
             current.recipient = recipient
             true
