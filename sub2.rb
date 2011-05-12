@@ -84,8 +84,8 @@ def send_mail to,subject,body
     Pony.mail(
       :to => to, 
       :from => 'weibo@session.im', 
-      :subject => 'subject,
-      :html_body => body
+      :subject => subject,
+      :html_body => body,
       :via => :smtp, :via_options => {
           :address => 'smtp.gmail.com',
           :port => '587',
