@@ -80,7 +80,22 @@ def publish_pic_and_status(token,status,attachment)
 end
 
 def send_mail to,subject,body
-    Pony.mail(:to => to, :from => 'weibo@session.im', :subject => subject, :body => body,:tls => true)
+    #Pony.mail(:to => to, :from => 'weibo@session.im', :subject => subject, :body => body,:tls => true)
+    Pony.mail(
+      :to => to, 
+      :from => 'weibo@session.im', 
+      :subject => 'subject,
+      :html_body => body
+      :via => :smtp, :via_options => {
+          :address => 'smtp.gmail.com',
+          :port => '587',
+          :user_name => 'xxx_name',#modify it
+          :password => 'xxx_password',
+          :enable_starttls_auto => true,
+          :authentication => :plain,  
+          :domain => "session.im"
+      }
+  )
 end
 
 def friends_timeline token,to
