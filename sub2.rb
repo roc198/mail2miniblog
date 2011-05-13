@@ -1,16 +1,6 @@
 #! /usr/bin/ruby
 #author newdongyuwei@gmail.com
-require 'rubygems'
-require "redis"
-require "oauth"
-require "cgi"
-require 'uri'
-require "tmail"
-require "yaml"
-require 'weibo'
-require 'logger'
-require 'haml'
-require 'pony'
+%w(rubygems eventmachine redis oauth cgi uri  tmail yaml weibo logger haml pony).each{|lib|require lib}
 
 redis = Redis.new(:thread_safe=>true)
 
@@ -80,7 +70,6 @@ def publish_pic_and_status(token,status,attachment)
 end
 
 def send_mail to,subject,body
-    #Pony.mail(:to => to, :from => 'weibo@session.im', :subject => subject, :body => body,:tls => true)
     Pony.mail(
       :to => to, 
       :from => 'weibo@session.im', 
@@ -95,7 +84,7 @@ def send_mail to,subject,body
           :authentication => :plain,  
           :domain => "session.im"
       }
-  )
+    )
 end
 
 def friends_timeline token,to
