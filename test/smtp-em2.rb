@@ -7,7 +7,7 @@ EM.run{
     mail.from = 'dongyuwei@weibo.com'
     mail.subject = 'hi!'
     #mail.text = 'hello world'
-    mail.html = "<h1>hello world</h1><a href="http://weibo.com">weibo.com</a>"
+    mail.html = '<h1>hello world</h1><a href="http://weibo.com">weibo.com</a>'
 
     email = EM::P::SmtpClient.send(
         :from=>mail.from,
