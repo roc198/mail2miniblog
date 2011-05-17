@@ -32,8 +32,7 @@ get '/' do
     session[:request_token] = @request_token.token 
     session[:request_token_secret] = @request_token.secret 
 	href = @request_token.authorize_url + "&oauth_callback=" + CGI.escape("http://session.im/callback")
-	'邮件发微博:
-	<br>授权<a href="' + href + '" title="mail2miniblog">邮件发(SINA)微博</a>'
+	'<div>邮件收发微博:<br>授权<a href="' + href + '" title="mail2miniblog">邮件发(SINA)微博</a></div><a href="http://code.google.com/p/mail2miniblog">本站源码</a><div></div>'
 end
 
 get '/callback' do
@@ -41,7 +40,7 @@ get '/callback' do
     @access_token = request_token.get_access_token(:oauth_verifier => params[:oauth_verifier]) 
     session['access_token'] = @access_token.token
     session['access_secret'] = @access_token.secret
-    "绑定邮箱请发送邮件到 v@session.im(邮件内容必须是 #{session['access_token']}&#{session['access_secret']})<br>邮箱绑定后，发送邮件到 t@session.im 即可发微博---邮件内容即发布为微博，同时第一个图片附件会自动被发布为微博图片"
+    "<ul><li>绑定邮箱请发送邮件到 v@session.im(邮件内容必须是 #{session['access_token']}&#{session['access_secret']})</li><li>邮箱绑定后，发送邮件到 t@session.im 即可发微博---邮件内容即发布为微博，同时第一个图片附件会自动被发布为微博图片</li><li>阅读订阅的微博发邮件到l@session.im</li><ul>"
 end
 
 set  :run ,true
