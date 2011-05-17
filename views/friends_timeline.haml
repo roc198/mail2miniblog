@@ -11,20 +11,12 @@
           width: 483px;
           border: 1px solid #242424;
           margin-bottom: 10px; }
-        
-        img.avatar {
-          float: left;
-          display: inline; }
-        
+  
         span.text {
           float: left;
           display: inline;
           width: 400px;
           margin-left: 10px; }
-        
-        img.thumbnail_pic {
-          clear: left;
-          float: left; }
         
         .retweeted_status {
           background: #cccccc;
@@ -40,11 +32,11 @@
         %a{:href => "http://t.sina.com.cn/#{weibo.user.id}", :target => "_blank"}=weibo.user.screen_name
         %span=weibo.text
         %br
-        %span=weibo.created_at
+        %span=DateTime.parse(weibo.created_at).strftime('%Y-%m-%d %H:%M:%S').to_s
       -if weibo.retweeted_status
         .retweeted_status
           %span.text
             %a{:href => "http://t.sina.com.cn/#{weibo.user.id}", :target => "_blank"}=weibo.retweeted_status.user.screen_name
             %span=weibo.retweeted_status.text
             %br
-            %span=weibo.retweeted_status.created_at
+            %span=DateTime.parse(weibo.retweeted_status.created_at).strftime('%Y-%m-%d %H:%M:%S').to_s
