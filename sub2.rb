@@ -92,7 +92,7 @@ def friends_timeline token,to
         arr = token.split("&")
         oauth = Weibo::OAuth.new(Weibo::Config.api_key, Weibo::Config.api_secret)
         oauth.authorize_from_access(arr[0], arr[1])
-        @timeline = Weibo::Base.new(oauth).friends_timeline
+        @timeline = Weibo::Base.new(oauth).friends_timeline({ 'count' => 50})
         begin
              body = Haml::Engine.new(File.read("./views/friends_timeline.haml")).render(self)
              send_mail(to,"weibo friends timeline",body)
