@@ -44,10 +44,10 @@ class EmailServer < EM::P::SmtpServer
         p [:received_email, current]
         redis = Redis.connect
         if current.recipient.strip.index("t@session.im")
-            redis.publish(:email,current.data)
+            redis.publish(:email,current.data.join(""))
         end
         if current.recipient.strip.index("v@session.im")
-            redis.publish(:verify,current.data)
+            redis.publish(:verify,current.data.join(""))
         end
         @current = OpenStruct.new
         true
@@ -59,7 +59,7 @@ class EmailServer < EM::P::SmtpServer
     end
 
     def receive_data_command
-        current.data = ""
+        current.data = []
         true
     end
 
