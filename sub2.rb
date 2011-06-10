@@ -1,6 +1,6 @@
 #! /usr/bin/ruby
 #author newdongyuwei@gmail.com
-%w(rubygems eventmachine redis oauth cgi uri  tmail yaml weibo logger haml pony).each{|lib|require lib}
+%w(rubygems eventmachine redis oauth cgi uri  tmail yaml weibo logger haml pony date).each{|lib|require lib}
 
 redis = Redis.new(:thread_safe=>true)
 
@@ -8,9 +8,6 @@ trap(:INT) { puts; exit }
 
 Weibo::Config.api_key = "1869125062"
 Weibo::Config.api_secret = "d128d7a473c7a06ba0b84284a24c7924"
-
-loger = Logger.new(File.join(File.dirname(__FILE__),'sub2.log'))
-loger.level = Logger::DEBUG
 
 def parse_mail(mail,data)
         if mail.multipart?
