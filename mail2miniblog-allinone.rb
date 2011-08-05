@@ -6,61 +6,47 @@ if GC.respond_to?(:copy_on_write_friendly=)
    GC.copy_on_write_friendly = true
 end
 
-require 'rubygems'   
-require "sinatra"  
-require "sinatra/base"  
-require  'oauth'
-require 'oauth/consumer'
-
-require 'eventmachine'
-require 'ostruct'
-require 'redis'
-
-require "cgi"
-require "tmail"
-
-require 'logger'
+%w(rubygems sinatra eventmachine ostruct redis oauth cgi uri  tmail yaml weibo  haml pony date).each{|lib|require lib}
 
 class Mail2MiniBlog  <  Sinatra::Base
     enable :sessions
     set  :run ,true
     
-    def new_consumer(api_key='1869125062', api_key_secret='d128d7a473c7a06ba0b84284a24c7924')
+    def new_Consumer(api_key='1869125062', api_key_secret='d128d7a473c7a06ba0b84284a24c7924')
         return OAuth::Consumer.new(api_key, api_key_secret , 
-                                        { 
-                                          :site=>"http://api.t.sina.com.cn",
-                                          :request_token_path=>"/oauth/request_token",
-                                          :access_token_path=>"/oauth/access_token",
-                                          :authorize_path=>"/oauth/authorize",
-                                          :signature_method=>"HMAC-SHA1",
-                                          :scheme=>:header,
-                                          :realm=>"http://session.im"
-                                        }
+              { 
+                :site=>"http://api.weibo.com",
+                :request_token_path=>"/oauth/request_token",
+                :access_token_path=>"/oauth/access_token",
+                :authorize_path=>"/oauth/authorize",
+                :signature_method=>"HMAC-SHA1",
+                :scheme=>:header,
+                :realm=>"http://session.im"
+              }
          )
     end
-
+    
     get '/' do
-        consumer = self.new_consumer()
-        request_token = consumer.get_request_token
-        session[:request_token] = request_token.token 
-        session[:request_token_secret] = request_token.secret 
-	    href = request_token.authorize_url + "&oauth_callback=" + CGI.escape("http://session.im/callback")
-	    '邮件发微博:
-	    <br>授权<a href="' + href + '" title="mail2miniblog">邮件发(SINA)微博</a>'
+        @consumer = new_Consumer()
+        @request_token = @consumer.get_request_token
+        session[:request_token] = @request_token.token 
+        session[:request_token_secret] = @request_token.secret 
+      href = @request_token.authorize_url + "&oauth_callback=" + CGI.escape("http://session.im/callback")
+      '<div>邮件收发微博:<br>授权<a href="' + href + '" title="mail2miniblog">邮件发(SINA)微博</a</div><div><a href="http://code.google.com/p/mail2miniblog" target="_blank">本站源码</a></div><hr><div><a href="http://weibo.session.im" target="_blank">分享微博订阅</a></div>'
     end
-
+    
     get '/callback' do
-        request_token = OAuth::RequestToken.new(self.new_consumer(), session[:request_token], session[:request_token_secret]) 
-        access_token = request_token.get_access_token(:oauth_verifier => params[:oauth_verifier]) 
-        session['access_token'] = access_token.token
-        session['access_secret'] = access_token.secret
-        "To bind your email,please send an email to v@session.im(the mail content MUST be #{session['access_token']}&#{session['access_secret']})<br>After your mail verified, to publish a sina weibo(miniblog),U can just send an email to t@session.im"
+        request_token = OAuth::RequestToken.new(new_Consumer(), session[:request_token], session[:request_token_secret]) 
+        @access_token = request_token.get_access_token(:oauth_verifier => params[:oauth_verifier]) 
+        session['access_token'] = @access_token.token
+        session['access_secret'] = @access_token.secret
+        "<ul><li>绑定邮箱请发送邮件到 v@session.im(邮件内容必须是 #{session['access_token']}&#{session['access_secret']})</li><li>邮箱绑定后，发送邮件到 t@session.im 即可发微博---邮件内容即发布为微博，同时第一个图片附件会自动被发布为微博图片</li><li>阅读订阅的微博发邮件到l@session.im</li><ul>"
     end
 end
 
 class EmailServer < EM::P::SmtpServer
-    @host ="session.im"#'127.0.0.1'
-    @port = 25#lsof -i:25
+    @host = "session.im"
+    @port = 25
     def receive_plain_auth(user, pass)
         true
     end
@@ -70,7 +56,7 @@ class EmailServer < EM::P::SmtpServer
     end
 
     def get_server_greeting
-        "#{@host} smtp server greets you with impunity"
+        "#{@host} smtp server"
     end
 
     def receive_sender(sender)
@@ -79,13 +65,18 @@ class EmailServer < EM::P::SmtpServer
     end
 
     def receive_recipient(recipient)
-        puts recipient
-	    if recipient.strip.index("t@session.im") or recipient.strip.index("v@session.im")
-            	current.recipient = recipient
-		    true
-	    else
-		    false
-	    end
+        current.recipient = recipient
+        rec = recipient.strip.sub("<","").sub(">","")
+        if rec == "l@session.im" or rec == "friends_timeline@session.im"
+            Redis.connect.publish(:friends_timeline,current.sender.strip.sub("<","").sub(">",""))
+            return true
+        end
+
+        if rec == "t@session.im" or rec == "v@session.im"
+            return true
+        else
+            return false
+        end
     end
 
     def receive_message
@@ -93,11 +84,12 @@ class EmailServer < EM::P::SmtpServer
         current.completed_at = Time.now
         p [:received_email, current]
         redis = Redis.connect
-	    if current.recipient.strip.index 't@session.im'
-            	redis.publish(:email,current.data)
-	    else
-            	redis.publish(:verify,current.data)
-	    end
+        if current.recipient.strip.index("t@session.im")
+            redis.publish(:email,current.data.join(""))
+        end
+        if current.recipient.strip.index("v@session.im")
+            redis.publish(:verify,current.data.join(""))
+        end
         @current = OpenStruct.new
         true
     end
@@ -108,7 +100,7 @@ class EmailServer < EM::P::SmtpServer
     end
 
     def receive_data_command
-        current.data = ""
+        current.data = []
         true
     end
 
@@ -143,78 +135,139 @@ class EmailServer < EM::P::SmtpServer
     def self.running?
         !!@server
     end
-    end
+end
 
 EM.run do
     EmailServer.start
-    
     Mail2MiniBlog .run!
     
-    def consumer(api_key='1869125062', api_key_secret='d128d7a473c7a06ba0b84284a24c7924')
-        return OAuth::Consumer.new(api_key, api_key_secret ,
-                                        {
-                                          :site=>"http://api.t.sina.com.cn",
-                                          :request_token_path=>"/oauth/request_token",
-                                          :access_token_path=>"/oauth/access_token",
-                                          :authorize_path=>"/oauth/authorize",
-                                          :signature_method=>"HMAC-SHA1",
-                                          :scheme=>:header,
-                                          :realm=>"http://session.im"
-                                        }
-         )
+    redis = Redis.new(:thread_safe=>true)
+
+    Weibo::Config.api_key = "1869125062"
+    Weibo::Config.api_secret = "d128d7a473c7a06ba0b84284a24c7924"
+    
+    def parse_mail(mail,data)
+            if mail.multipart?
+                if mail.has_attachments?
+                    attachment = mail.attachments.first
+                    name = attachment.original_filename or '.attachment'
+                    File.open(name,"w+") { |f|
+                        f << attachment.gets(nil)
+                    }
+                    
+                    data[:attachment] =  name
+                end
+    
+                mail.parts.each do |m|
+                    m.base64_decode
+                    if m.multipart?
+                        parse_mail(m,data)
+                    else
+                        if m.content_type == 'text/plain'
+                            data[:body] = m.body
+                        end
+                    end
+                end
+            else
+                data[:body] = mail.body
+            end
     end
     
-    def update_status(token,status)
-        arr = token.split("&")
-        access_token = OAuth::AccessToken.new(new_consumer(),arr[0],arr[1])
-        if access_token
-            access_token.post("http://api.t.sina.com.cn/statuses/update.json",{"status" => CGI.escape(status) })
+    def get_mail_body_and_attachment(mail)
+        data = {}
+        parse_mail(mail,data)
+        data[:body] = data[:body] || ""
+        data[:body] = data[:body].slice(0,280).strip#140*2
+        return data
+    end
+    
+    def publish_pic_and_status(token,status,attachment)
+        if token
+            arr = token.split("&")
+            oauth = Weibo::OAuth.new(Weibo::Config.api_key, Weibo::Config.api_secret)
+            oauth.authorize_from_access(arr[0], arr[1])
+            if attachment and (File.exists? attachment)
+                begin
+                    Weibo::Base.new(oauth).upload(status, File.open(attachment,'r'))
+                rescue Exception=>e
+                    puts e.to_str
+                end
+                File.delete attachment
+            else
+                begin
+                    Weibo::Base.new(oauth).update(status)
+                rescue Exception=>e
+                    puts e.to_str
+                end
+            end 
         end
     end
     
-    loger = Logger.new(File.join(File.dirname(__FILE__),'all.log'))
-    loger.level = Logger::DEBUG
-  
-    redis = Redis.new(:thread_safe=>true)
-    redis.subscribe(:verify,:email) do |on|
-        on.message do |channel, message|
-            loger.debug(channel)
-            loger.debug(message)
+    def send_mail to,subject,body
+        Pony.mail(
+          :to => to, 
+          :from => 'weibo@session.im', 
+          :subject => subject,
+          :html_body => body,
+          :via => :smtp, :via_options => {
+              :address => 'smtp.gmail.com',
+              :port => '587',
+              :user_name => 'xxx_name',#modify it
+              :password => 'xxx_password',
+              :enable_starttls_auto => true,
+              :authentication => :plain,  
+              :domain => "session.im"
+          }
+        )
+    end
+    
+    def friends_timeline token,to
+        if token
+            arr = token.split("&")
+            oauth = Weibo::OAuth.new(Weibo::Config.api_key, Weibo::Config.api_secret)
+            oauth.authorize_from_access(arr[0], arr[1])
+            @timeline = Weibo::Base.new(oauth).friends_timeline({ 'count' => 50})
             begin
-                mail = TMail::Mail.parse(message)
-                if mail
-                    puts mail
-                    p mail.to,mail.from
-                    body = ''
-                    if mail.multipart? 
-                        mail.parts.each do |m|
-                            if m.content_type == "text/plain"
-                                body = m.body
-                            end
-                        end
-                    else
-                        body = mail.body
-                    end
-                    body = body.slice(0,420).strip#140*3
-                    loger.debug(body)
-                    
+                 body = Haml::Engine.new(File.read("./views/friends_timeline.haml")).render(self)
+                 send_mail(to,"weibo friends timeline",body)
+            rescue Exception=>e
+                puts e.to_str
+            end 
+        end
+    end
+    
+    redis.subscribe(:verify,:email,:friends_timeline) do |on|
+        on.message do |channel, message|
+            puts channel    
+            if channel == 'friends_timeline'
+                friends_timeline(Redis.connect.get(message),message)
+            else
+                begin
+                    mail = TMail::Mail.parse(message)
                     redis2 = Redis.connect
                     token = redis2.get(mail.from[0])
-                    loger.debug("token: #{token}")
-                    if channel == 'verify'
-		                if not token
-                            		redis2.set(mail.from[0],body.strip) 
-		                end
-                        else#channel is 'email',meaning to publish miniblog
-                            if token
-                                update_status(token,body)
+                    puts "token: #{token}"
+    
+                    if mail
+                        body_attachment = get_mail_body_and_attachment(mail)
+                        body = body_attachment[:body]
+                        attachment = body_attachment[:attachment]
+                        
+                        if channel == 'verify'
+                            if not token
+                                redis2.set(mail.from[0],body) 
                             end
-                    end
-                else
-                    puts "error when TMail::Mail.parse "
-                end    
-            rescue Exception=>e
-                loger.error(e.to_str)
+                        end
+    
+                        if channel == 'email'
+                            publish_pic_and_status(token,body,attachment)
+                        end
+                    else
+                        puts "error when TMail::Mail.parse "
+                    end    
+                rescue Exception=>e
+                    puts e.to_str
+                end
             end
         end
     end

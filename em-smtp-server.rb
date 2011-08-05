@@ -94,7 +94,7 @@ class EmailServer < EM::P::SmtpServer
     def self.running?
         !!@server
     end
-    end
+end
 
 EM.run{ EmailServer.start }
 
