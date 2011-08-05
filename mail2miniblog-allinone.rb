@@ -10,7 +10,10 @@ end
 
 class Mail2MiniBlog  <  Sinatra::Base
     enable :sessions
-    set  :run ,true
+    set :run ,true
+    set :port, 3000
+    set :environment, :production
+    set :logging, true
     
     def new_Consumer(api_key='1869125062', api_key_secret='d128d7a473c7a06ba0b84284a24c7924')
         return OAuth::Consumer.new(api_key, api_key_secret , 
@@ -139,7 +142,7 @@ end
 
 EM.run do
     EmailServer.start
-    Mail2MiniBlog .run!
+    Mail2MiniBlog.run!
     
     redis = Redis.new(:thread_safe=>true)
 
