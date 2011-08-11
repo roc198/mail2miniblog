@@ -10,11 +10,3 @@ else
   echo "Start the mail2miniblog-allinone.rb process now:"
   nohup /usr/local/bin/ruby /opt/hg/mail2miniblog/mail2miniblog-allinone.rb &
 fi
-
-count2=`ps -wef|grep sub2.rb |grep -v grep |wc -l`
-if [ "$count2" -eq 1 ]; then
-  echo "The sub2.rb process already run";
-else
-  echo "Start the sub2.rb process now:"
-  nohup /usr/local/bin/ruby /opt/hg/mail2miniblog/sub2.rb &
-fi
