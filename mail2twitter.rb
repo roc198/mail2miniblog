@@ -1,12 +1,13 @@
 #! /usr/bin/ruby
+# encoding: UTF-8
 #by newdongyuwei@gmail.com
-#mail2miniblog all in one
+#mail2twitter
+#$KCODE = "UTF-8"
 
 if GC.respond_to?(:copy_on_write_friendly=)
    GC.copy_on_write_friendly = true
 end
-
-%w(rubygems sinatra redis twitter_oauth json cgi uri  pony).each{|lib|require lib}
+%w(rubygems sinatra  redis twitter_oauth json cgi uri  pony).each{|lib|require lib}
 
 def send_mail to,subject,body
   Pony.mail(
@@ -42,7 +43,7 @@ get '/twitter/' do
 	    :consumer_key => @consumer_key ,
 	    :consumer_secret => @consumer_secret  
 	)
-	request_token = client.request_token(:oauth_callback => CGI.escape("http://session.im/twitter/callback/"))
+	request_token = @client.request_token(:oauth_callback => CGI.escape("http://session.im/twitter/callback/"))
 	session['twitter_request_token'] = request_token.token
 	session['twitter_request_secret'] = request_token.secret
 
