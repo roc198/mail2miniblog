@@ -30,7 +30,7 @@ end
 
 enable :sessions
 set :run ,true
-set :port, 3000
+set :port, 6789
 set :environment, :production
 set :logging, true
 REDIS = Redis.new(:thread_safe => true,:db => 2)
