@@ -35,24 +35,24 @@ set :port, 6789
 set :environment, :production
 set :logging, true
 REDIS = Redis.new(:thread_safe => true,:db => 2)
-@consumer_key = '8BMVUFdK5HhUvPafrmw9w'
-@consumer_secret = 'dZH43hGFF1df3x3wCcBvlzAiGFPhrU0rU67nj6IeJs'
+@@consumer_key = '8BMVUFdK5HhUvPafrmw9w'
+@@consumer_secret = 'dZH43hGFF1df3x3wCcBvlzAiGFPhrU0rU67nj6IeJs'
 
 get '/twitter/' do 
-	@client = TwitterOAuth::Client.new(
-	    :consumer_key => @consumer_key ,
-	    :consumer_secret => @consumer_secret  
+	@@client = TwitterOAuth::Client.new(
+	    :consumer_key => @@consumer_key ,
+	    :consumer_secret => @@consumer_secret  
 	)
-	request_token = @client.request_token(:oauth_callback => CGI.escape("http://session.im/twitter/callback/"))
+	request_token = @@client.request_token(:oauth_callback => CGI.escape("http://session.im:6789/twitter/callback"))
 	session['twitter_request_token'] = request_token.token
 	session['twitter_request_secret'] = request_token.secret
-
-	#href = request_token.authorize_url + "&oauth_callback=" + CGI.escape("http://session.im/twitter/callback/")
-	"<div>授权<a href="#{request_token.authorize_url}">邮件收发Twitter</a></div>"
+	puts request_token.authorize_url
+	href = request_token.authorize_url + "&oauth_callback=#{CGI.escape('http://session.im:6789/twitter/callback')}"
+	"<div>authorize:<a href='#{href}'>mail2Twitter</a></div>"
 end
 
 get '/twitter/callback' do
-	access_token = @client.authorize(
+	access_token = @@client.authorize(
 		session['twitter_request_token'],
 		session['twitter_request_secret'],
 		:oauth_verifier => params[:oauth_verifier]
