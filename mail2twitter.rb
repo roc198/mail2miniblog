@@ -43,11 +43,10 @@ get '/twitter/' do
 	    :consumer_key => @@consumer_key ,
 	    :consumer_secret => @@consumer_secret  
 	)
-	request_token = @@client.request_token(:oauth_callback => CGI.escape("http://session.im:6789/twitter/callback"))
+	request_token = @@client.request_token(:oauth_callback => "http://session.im:6789/twitter/callback")
 	session['twitter_request_token'] = request_token.token
 	session['twitter_request_secret'] = request_token.secret
-	puts request_token.authorize_url
-	href = request_token.authorize_url + "&oauth_callback=#{CGI.escape('http://session.im:6789/twitter/callback')}"
+	href = request_token.authorize_url + "&oauth_callback=http://session.im:6789/twitter/callback"
 	"<div>authorize:<a href='#{href}'>mail2Twitter</a></div>"
 end
 
@@ -59,9 +58,11 @@ get '/twitter/callback' do
 	)
 	
 	"<ul>
-		<li>绑定邮箱请发送邮件到 v@twitter.mailgun.org(邮件<bold>标题</bold>必须是 #{access_token.token}&#{access_token.secret})</li>
-		<li>邮箱绑定后，发送邮件到 t@twitter.mailgun.org 即可发微博---邮件<bold>标题</bold>即发布为微博</li>
-		<li>阅读订阅的twitter发邮件到l@twitter.mailgun.org</li>
+		<li>To bind email,you just need send an email to  v@twitter.mailgun.org (the email's <bold>Subject</bold> Must be  #{access_token.token}&#{access_token.secret})</li>
+		<li></li>
+		<li>After your email binded, to publish a twitter, you can send  email to  t@twitter.mailgun.org (the email's<bold>Subject</bold> will be parsed as twitter,the mail body can be empty)</li>
+		<li></li>
+		<li>To read your friend's timeline ,you can send email to l@twitter.mailgun.org (the Subject and Body of mail can be anything)</li>
 	<ul>"
 
 end
