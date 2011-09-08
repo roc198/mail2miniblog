@@ -1,0 +1,4 @@
+consumer_key: "8BMVUFdK5HhUvPafrmw9w"
+consumer_secret: "dZH43hGFF1df3x3wCcBvlzAiGFPhrU0rU67nj6IeJs"
+callback_url: "http://127.0.0.1:6789/auth" 
+
