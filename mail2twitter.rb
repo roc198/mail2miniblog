@@ -86,9 +86,10 @@ post '/twitter/t/' do
 				client = TwitterOAuth::Client.new(
 				    :consumer_key => @@consumer_key,
 				    :consumer_secret => @@consumer_secret ,
-				    :token => token_secret[:token], 
-				    :secret => token_secret[:secret]
+				    :token => token_secret['token'], 
+				    :secret => token_secret['secret']
 				)
+				puts client.authorized?
 				client.update(params[:subject]) if params[:subject] and params[:subject]!= ""
 			end
 		rescue Exception=>e
@@ -107,9 +108,10 @@ post '/twitter/l/' do
 				client = TwitterOAuth::Client.new(
 				    :consumer_key => @@consumer_key,
 				    :consumer_secret => @@consumer_secret ,
-				    :token => token_secret[:token], 
-				    :secret => token_secret[:secret]
+				    :token => token_secret['token'], 
+				    :secret => token_secret['secret']
 				)
+				puts client.authorized?
 				send_mail(params[:sender],'twitter friend timeline',client.friends_timeline)		
 			end
 		rescue Exception=>e
