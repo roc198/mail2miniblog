@@ -7,7 +7,7 @@
 if GC.respond_to?(:copy_on_write_friendly=)
    GC.copy_on_write_friendly = true
 end
-%w(rubygems sinatra  redis twitter_oauth json cgi uri  pony).each{|lib|require lib}
+%w(rubygems sinatra  redis twitter_oauth json cgi uri  pony erb).each{|lib|require lib}
 
 def send_mail to,subject,body
   Pony.mail(
