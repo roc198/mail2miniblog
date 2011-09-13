@@ -38,11 +38,7 @@ REDIS = Redis.new(:thread_safe => true,:db => 2)
 @@consumer_key = '8BMVUFdK5HhUvPafrmw9w'
 @@consumer_secret = 'dZH43hGFF1df3x3wCcBvlzAiGFPhrU0rU67nj6IeJs'
 
-get '/' do
-	redirect '/twitter/'
-end
-
-get '/twitter/' do 
+get '/' do 
 	@@client = TwitterOAuth::Client.new(
 	    :consumer_key => @@consumer_key ,
 	    :consumer_secret => @@consumer_secret  
