@@ -84,8 +84,8 @@ post '/twitter/t/' do
 			token_secret = JSON.parse(value)
 			if token_secret 
 				client = TwitterOAuth::Client.new(
-				    :consumer_key => @consumer_key,
-				    :consumer_secret => @consumer_secret ,
+				    :consumer_key => @@consumer_key,
+				    :consumer_secret => @@consumer_secret ,
 				    :token => token_secret[:token], 
 				    :secret => token_secret[:secret]
 				)
@@ -105,8 +105,8 @@ post '/twitter/l/' do
 			token_secret = JSON.parse(value)
 			if token_secret 
 				client = TwitterOAuth::Client.new(
-				    :consumer_key => @consumer_key,
-				    :consumer_secret => @consumer_secret ,
+				    :consumer_key => @@consumer_key,
+				    :consumer_secret => @@consumer_secret ,
 				    :token => token_secret[:token], 
 				    :secret => token_secret[:secret]
 				)
