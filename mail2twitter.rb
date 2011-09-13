@@ -73,6 +73,7 @@ post '/twitter/v/' do
 	if subject and subject.index("&")
 		arr = subject.split("&")	
 		REDIS.set(params[:sender],{:token => arr[0], :secret => arr[1]}.to_json)
+		send_mail(params[:sender],'your twitter account and mail binded',"To publish a twitter, you can send  email to  t@twitter.mailgun.org (the email's Subject will be parsed as twitter,the mail body can be empty);To read your friend's timeline ,you can send email to l@twitter.mailgun.org (the Subject and Body of mail can be anything)")	
 	end
 end
 	
@@ -81,7 +82,7 @@ post '/twitter/t/' do
 	if value
 		begin
 			token_secret = JSON.parse(value)
-			if hash
+			if token_secret 
 				client = TwitterOAuth::Client.new(
 				    :consumer_key => @consumer_key,
 				    :consumer_secret => @consumer_secret ,
@@ -102,7 +103,7 @@ post '/twitter/l/' do
 	if value
 		begin
 			token_secret = JSON.parse(value)
-			if hash
+			if token_secret 
 				client = TwitterOAuth::Client.new(
 				    :consumer_key => @consumer_key,
 				    :consumer_secret => @consumer_secret ,
