@@ -116,7 +116,27 @@ post '/twitter/l/' do
 				    :secret => token_secret['secret']
 				)
 				puts client.authorized?
-				send_mail(params[:sender],'twitter friend timeline',client.friends_timeline)		
+				tweets = client.friends_timeline
+				template = ERB.new <<-EOF 
+					<div class="timeline">
+					    <% tweets.each do |status| %>
+						<p>
+						    <div style="float:left; margin:5px">
+							<a href="http://twitter.com/<%= status['user']['screen_name'] %>">
+							    <img src="<%= status['user']['profile_image_url'] %>" width="48" height="48"/>
+							</a>
+						    </div>
+						    <div style="">
+							<a href="http://twitter.com/<%= status['user']['screen_name'] %>">@<%= status['user']['screen_name'] %></a>
+							<%= status['text'] %>
+						    </div>
+						    <br clear="all"/>
+						</p>
+					    <% end %>
+					</div>
+				EOF
+
+				send_mail(params[:sender],'twitter friend timeline', template.result(binding))		
 			end
 		rescue Exception=>e
 			puts e.to_str

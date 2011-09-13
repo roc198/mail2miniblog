@@ -9,8 +9,8 @@ TCPSocket::socks_port = 9999
 Twitter.configure do |config|
   config.consumer_key = '8BMVUFdK5HhUvPafrmw9w'
   config.consumer_secret = 'dZH43hGFF1df3x3wCcBvlzAiGFPhrU0rU67nj6IeJs'
-  config.oauth_token = '42655463-Bjqzpgxh5CaW3023u7Bi3qFW8TIzboeJ9DRPgnUoR'
-  config.oauth_token_secret = 'Vtd6dQ8B0n9MiCI85gxP6qddKwwKmS6uwv6FHLK1Y'
+  config.oauth_token = '42655463-GjJfLRNHjcl45XlMnnv9rk3XOsFId9h5gA2sdHbW4'
+  config.oauth_token_secret = 'TBejKH52LYDxQhzbDCjFsN39sD18QEuisi3AhZAo'
 end
 
 Twitter.update("I'm tweeting with twitter gem!")
