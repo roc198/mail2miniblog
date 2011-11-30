@@ -144,6 +144,8 @@ class EmailServer < EM::P::SmtpServer
     end
 end
 
+EM.epoll
+
 EM.run do
     Proxy.start(:host => "0.0.0.0", :port => 25, :debug => false) do |conn| 
         conn.server :prod, :host => "127.0.0.1", :port => 2525
