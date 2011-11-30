@@ -52,7 +52,7 @@ class Mail2MiniBlog  <  Sinatra::Base
 end
 
 class EmailServer < EM::P::SmtpServer
-    @host = "session.im" # "localhost"
+    @host = "127.0.0.1" # "localhost"
     @port = 2525
     def receive_plain_auth(user, pass)
         true
