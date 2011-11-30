@@ -6,7 +6,7 @@ if GC.respond_to?(:copy_on_write_friendly=)
    GC.copy_on_write_friendly = true
 end
 
-%w(rubygems sinatra eventmachine ostruct redis oauth cgi uri  tmail yaml weibo  haml pony date).each{|lib|require lib}
+%w(rubygems sinatra eventmachine em-proxy ostruct redis oauth cgi uri  tmail yaml weibo  haml pony date).each{|lib|require lib}
 
 class Mail2MiniBlog  <  Sinatra::Base
     enable :sessions
@@ -53,7 +53,7 @@ end
 
 class EmailServer < EM::P::SmtpServer
     @host = "session.im" # "localhost"
-    @port = 25
+    @port = 2525
     def receive_plain_auth(user, pass)
         true
     end
@@ -145,7 +145,21 @@ class EmailServer < EM::P::SmtpServer
 end
 
 EM.run do
+    Proxy.start(:host => "0.0.0.0", :port => 25, :debug => false) do |conn| 
+        conn.server :prod, :host => "127.0.0.1", :port => 2525
+        conn.server :dev,  :host => "127.0.0.1", :port => 2526
+        conn.server :test, :host => "127.0.0.1", :port => 2527
+        conn.on_data do |data|
+            data
+        end
+
+        conn.on_response do |server, resp|
+            resp if server == :prod
+        end
+    end
+
     EmailServer.start
+
     Mail2MiniBlog.run!
     
     #redis.subscribe会阻塞---EventMachine is evented and thus single-threaded
