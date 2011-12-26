@@ -39,7 +39,7 @@ class Mail2Weibo  <  Sinatra::Base
         request_token = consumer.get_request_token
         session[:request_token] = request_token.token 
         session[:request_token_secret] = request_token.secret 
-        href = request_token.authorize_url + "&oauth_callback=" + CGI.escape("http://session.im:8888/weibo/callback")
+        href = request_token.authorize_url + "&oauth_callback=" + CGI.escape("http://mail2weibo.session.im/weibo/callback")
         "<div>授权<a href='#{href}'>邮件收发(新浪)微博</a></div>"
     end
     
