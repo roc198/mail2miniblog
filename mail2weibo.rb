@@ -62,7 +62,7 @@ class Mail2Weibo  <  Sinatra::Base
 		if subject and subject.index("&")
 			arr = subject.split("&")	
 			REDIS.set(params[:sender],{:token => arr[0], :secret => arr[1]}.to_json)
-			send_mail(params[:sender],'your weibo account and your mail binded',"To publish a weibo, you can send  email to  t@weibo.mailgun.org (the email's Subject will be parsed as weibo content,the mail body can be empty);To read your friend's timeline ,you can send email to l@weibo.mailgun.org (the Subject and Body of mail can be anything)")	
+			send_asyn_mail(params[:sender],'your weibo account and your mail binded',"To publish a weibo, you can send  email to  t@weibo.mailgun.org (the email's Subject will be parsed as weibo content,the mail body can be empty);To read your friend's timeline ,you can send email to l@weibo.mailgun.org (the Subject and Body of mail can be anything)")	
 		end
 	end
 		
@@ -91,7 +91,7 @@ class Mail2Weibo  <  Sinatra::Base
           @timeline = Weibo::Base.new(oauth).friends_timeline({ 'count' => 50})
           begin
                body = Haml::Engine.new(File.read("./views/friends_timeline.haml")).render(self)
-               send_mail(to,"weibo friends timeline",body)
+               send_asyn_mail(to,"weibo friends timeline",body)
           rescue Exception=>e
               puts e.to_str
           end 
@@ -109,7 +109,7 @@ class Mail2Weibo  <  Sinatra::Base
           			@timeline = Weibo::Base.new(oauth).friends_timeline({ 'count' => 30})
           			begin
 		               body = Haml::Engine.new(File.read("./views/friends_timeline.haml")).render(self)
-		               send_mail(params[:sender],"weibo friends timeline",body)
+		               send_asyn_mail(params[:sender],"weibo friends timeline",body)
 		          	rescue Exception=>e
 		              puts e.to_str
 		         	end 
@@ -137,6 +137,45 @@ class Mail2Weibo  <  Sinatra::Base
 	    }
 	  )
 	end
+
+	def send_asyn_mail to,subject,body
+		mail = MailFactory.new
+	    mail.to = to
+	    mail.from = 'mail2weibo@weibo.com'
+	    mail.subject = subject
+	    mail.html = body
+
+	    email = EventMachine::Protocols::SmtpClient.send(
+	        :from=>mail.from,
+	        :to=>mail.to,
+	        :content=>"#{mail.to_s}\r\n.\r\n",
+	        :header=> {"Subject" => mail.subject},
+	        :domain=>"session.im",
+	        :host=>'smtp.gmail.com',
+	        :port=>587,   
+	        :starttls=>true,  
+	        :auth => {
+	            :type=>:plain, 
+	            :username=>"mail2weibo@gmail.com", 
+	            :password=>"xxxx"
+	        },
+	        :verbose => true
+	    )
+	    email.callback{
+	        puts 'SmtpClient ok!'
+	        EM.stop
+	    }
+	    email.errback{ |e|
+	        puts 'SmtpClient failed!'
+	        puts e.to_s
+	        EM.stop
+	    }
+	end
 end
 
-Mail2Weibo.run!
+EM.epoll
+
+EM.run do
+	Mail2Weibo.run!
+end
+
