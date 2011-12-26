@@ -7,7 +7,7 @@ if GC.respond_to?(:copy_on_write_friendly=)
    GC.copy_on_write_friendly = true
 end
 
-%w(rubygems sinatra eventmachine  redis oauth cgi uri yaml weibo  json haml pony date).each{|lib|require lib}
+%w(rubygems sinatra   redis oauth cgi uri yaml weibo  json haml pony date).each{|lib|require lib}
 
 class Mail2Weibo  <  Sinatra::Base
     enable :sessions
@@ -62,7 +62,7 @@ class Mail2Weibo  <  Sinatra::Base
 		if subject and subject.index("&")
 			arr = subject.split("&")	
 			REDIS.set(params[:sender],{:token => arr[0], :secret => arr[1]}.to_json)
-			#send_mail(params[:sender],'your weibo account and your mail binded',"To publish a weibo, you can send  email to  t@weibo.mailgun.org (the email's Subject will be parsed as weibo content,the mail body can be empty);To read your friend's timeline ,you can send email to l@weibo.mailgun.org (the Subject and Body of mail can be anything)")	
+			send_mail(params[:sender],'Your weibo account and your mail have binded',"To publish a weibo, you can send  email to  t@weibo.mailgun.org (the email's Subject will be parsed as weibo content,the mail body can be empty);To read your friend's timeline ,you can send email to l@weibo.mailgun.org (the Subject and Body of mail can be anything)")	
 		end
 	end
 		
@@ -121,27 +121,25 @@ class Mail2Weibo  <  Sinatra::Base
 	end
 
 	def send_mail to,subject,body
-	  Pony.mail(
-	    :to => to, 
-	    :from => 'weibo@session.im', 
-	    :subject => subject,
-	    :html_body => body,
-	    :via => :smtp, :via_options => {
-		:address => 'smtp.gmail.com',
-		:port => '587',
-		:user_name => 'mail2weibo',#modify it
-		:password => 'mail2weibo',
-		:enable_starttls_auto => true,
-		:authentication => :plain,  
-		:domain => "session.im"
-	    }
+        Thread.new do
+            Pony.mail(
+	        :to => to, 
+	        :from => 'weibo@session.im', 
+	        :subject => subject,
+	        :html_body => body,
+	        :via => :smtp, :via_options => {
+		        :address => 'smtp.gmail.com',
+		        :port => '587',
+		        :user_name => 'mail2weibo',#modify it
+		        :password => 'mail2weibo',#modify it
+		        :enable_starttls_auto => true,
+		        :authentication => :plain,  
+		        :domain => "session.im"
+	        }
 	  )
+        end
 	end
 end
 
-EM.epoll
-
-EM.run do
-	Mail2Weibo.run!
-end
+Mail2Weibo.run!
 
