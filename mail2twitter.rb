@@ -10,21 +10,23 @@ end
 %w(rubygems sinatra  redis twitter_oauth json cgi uri  pony erb).each{|lib|require lib}
 
 def send_mail to,subject,body
-  Pony.mail(
-    :to => to, 
-    :from => 'weibo@session.im', 
-    :subject => subject,
-    :html_body => body,
-    :via => :smtp, :via_options => {
-	:address => 'smtp.gmail.com',
-	:port => '587',
-	:user_name => 'xxx_name',#modify it
-	:password => 'xxx_password',
-	:enable_starttls_auto => true,
-	:authentication => :plain,  
-	:domain => "session.im"
-    }
-  )
+    Thread.new do
+        Pony.mail(
+        :to => to, 
+        :from => 'weibo@session.im', 
+        :subject => subject,
+        :html_body => body,
+        :via => :smtp, :via_options => {
+	        :address => 'smtp.gmail.com',
+	        :port => '587',
+	        :user_name => 'mail2weibo',#modify it
+	        :password => 'mail2weibo',
+	        :enable_starttls_auto => true,
+	        :authentication => :plain,  
+	        :domain => "session.im"
+        }
+    )
+    end
 end
 
 
