@@ -163,12 +163,10 @@ class Mail2Weibo  <  Sinatra::Base
 	    )
 	    email.callback{
 	        puts 'SmtpClient ok!'
-	        EM.stop
 	    }
 	    email.errback{ |e|
 	        puts 'SmtpClient failed!'
 	        puts e.to_s
-	        EM.stop
 	    }
 	end
 end
