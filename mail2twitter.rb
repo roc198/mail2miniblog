@@ -58,9 +58,9 @@ get '/twitter/callback' do
 	)
 	
 	"<ul>
-		<li>To bind email,you just need send an email to  v@twitter.mailgun.org (the email's <bold>Subject</bold> Must be  #{access_token.token}&#{access_token.secret})</li>
+		<li>To bind email,you just need send an email to  v@twitter.mailgun.org (the email's <b>Subject</b> Must be  #{access_token.token}&#{access_token.secret})</li>
 		<li></li>
-		<li>After your email binded, to publish a twitter, you can send  email to  t@twitter.mailgun.org (the email's<bold>Subject</bold> will be parsed as twitter,the mail body can be empty)</li>
+		<li>After your email binded, to publish a twitter, you can send  email to  t@twitter.mailgun.org (the email's<b>Subject</b> will be parsed as twitter,the mail body can be empty)</li>
 		<li></li>
 		<li>To read your friend's timeline ,you can send email to l@twitter.mailgun.org (the Subject and Body of mail can be anything)</li>
 	<ul>"
