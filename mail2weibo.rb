@@ -143,7 +143,7 @@ class Mail2Weibo  <  Sinatra::Base
 	    mail.to = to
 	    mail.from = 'mail2weibo@weibo.com'
 	    mail.subject = subject
-	    mail.html = body
+	    mail.rawhtml = body
 
 	    email = EventMachine::Protocols::SmtpClient.send(
 	        :from=>mail.from,
