@@ -7,7 +7,7 @@ if GC.respond_to?(:copy_on_write_friendly=)
    GC.copy_on_write_friendly = true
 end
 
-%w(rubygems sinatra eventmachine redis oauth cgi uri yaml weibo  json haml pony date).each{|lib|require lib}
+%w(rubygems sinatra eventmachine mailfactory redis oauth cgi uri yaml weibo  json haml pony date).each{|lib|require lib}
 
 class Mail2Weibo  <  Sinatra::Base
     enable :sessions
