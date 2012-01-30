@@ -7,7 +7,7 @@ if GC.respond_to?(:copy_on_write_friendly=)
    GC.copy_on_write_friendly = true
 end
 
-%w(rubygems sinatra   redis oauth cgi uri yaml weibo  json haml pony date).each{|lib|require lib}
+%w(rubygems sinatra  eventmachine redis oauth cgi uri yaml weibo  json haml pony date).each{|lib|require lib}
 
 class Mail2Weibo  <  Sinatra::Base
     enable :sessions
@@ -119,27 +119,41 @@ class Mail2Weibo  <  Sinatra::Base
 			end
 		end
 	end
+	get '/test' do
+		EM::next_tick do 
+			puts 'EM::next_tick'
+		end
+		'EM::next_tick replace Thread.new'
+	end
 
 	def send_mail to,subject,body
-        Thread.new do
-            Pony.mail(
-	        :to => to, 
-	        :from => 'weibo@session.im', 
-	        :subject => subject,
-	        :html_body => body,
-	        :via => :smtp, :via_options => {
-		        :address => 'smtp.gmail.com',
-		        :port => '587',
-		        :user_name => 'mail2weibo',#modify it
-		        :password => 'mail2weibo',#modify it
-		        :enable_starttls_auto => true,
-		        :authentication => :plain,  
-		        :domain => "session.im"
-	        }
-	  )
-        end
+		EM::next_tick do 
+			Pony.mail(
+				:to => to, 
+				:from => 'weibo@session.im', 
+				:subject => subject,
+				:html_body => body,
+				:via => :smtp, :via_options => {
+				    :address => 'smtp.gmail.com',
+				    :port => '587',
+				    :user_name => 'mail2weibo',#modify it
+				    :password => 'mail2weibo',#modify it
+				    :enable_starttls_auto => true,
+				    :authentication => :plain,  
+				    :domain => "session.im"
+				}
+			)
+		end
+
+        #Thread.new do end
 	end
 end
 
-Mail2Weibo.run!
+
+
+EM.epoll
+
+EM.run do
+	Mail2Weibo.run!
+end
 
