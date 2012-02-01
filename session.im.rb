@@ -16,6 +16,7 @@ set :logging, true
 
 get '/' do
     "<div><a href='http://mail2weibo.session.im'>邮件收发(SINA)微博</a></div>
+    <div><a href='http://mail2weibo2.session.im'>邮件发(SINA)微博---支持图片附件发布为微博图片</a></div>
     <hr><div><a href='http://code.google.com/p/mail2miniblog' target='_blank'>本站源码</a></div>
     <hr><div><a href='http://ruby.session.im' target='_blank'>try Ruby on WebSocket</a></div>
     <hr><div><a href='http://twitter.session.im' target='_blank'>mail2twitter(邮件发twitter)</a></div>
