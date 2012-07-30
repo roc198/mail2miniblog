@@ -1,3 +1,5 @@
+var ejs = require('ejs');
+var nodemailer = require("nodemailer");
 var path = require('path');
 var fs = require('fs');
 var express = require('express');
@@ -56,7 +58,14 @@ function mailParser(){
                     });
                     break;
                 case 'l':
-                    //todo
+                    client.get(mail.from[0].address + '_oauth2',function(err,token){
+                        if(err){
+                            throw err; 
+                        }
+                        if(token){
+                            friendsTimeline(token,mail.from[0].address);
+                        }
+                    });
                     break;
             }
         });
@@ -77,6 +86,40 @@ function publishWeibo(token,status,picPath,cb){
             cb(json);
         });
     }
+}
+function friendsTimeline(token,recipient){
+    weibo_api.statuses.friends_timeline(token, function(json){
+        process.nextTick(function(){
+            sendMail(recipient,ejs.render(fs.readFileSync(path.join(__dirname,'views/friends_timeline.ejs') ,'utf8'),json));
+        });
+    });
+}
+
+function sendMail(to,html){
+    var smtpTransport = nodemailer.createTransport("SMTP",{
+        service: "Gmail",
+        auth: {
+            user: "mail2weibo@gmail.com",
+            pass: "mail2miniblogxxoo"//change it!
+        }
+    });
+
+    var mailOptions = {
+        from: "mail2weibo@gmail.com", 
+        to: to, 
+        subject: "mail2weibo", 
+        text: "", 
+        html: html 
+    }
+
+    smtpTransport.sendMail(mailOptions, function(error, response){
+        if(error){
+            console.log(error);
+        }else{
+            console.log("Message sent: " + response.message);
+        }
+        smtpTransport.close();
+    });
 }
 
 function leftB(str, lens){
@@ -111,10 +154,6 @@ exports.startServer = function(){
                 <li>绑定邮箱,请发邮件到 v@session.im (邮件 <b>主题</b> 必须为 access_token <b>邮件内容</b>可以为空)</li>\
                 <li>绑定邮箱后,发邮件到 t@session.im (邮件 <b>主题</b> 即为微博内容,<b>图片附件</b>会自动发布为微博图片. <b>邮件内容</b>可以为空)即可发布微博</li>\
             <ul>'.replace('access_token',data['access_token']));
-            
-          // weibo_api.statuses.friends_timeline(data['access_token'], function(json){
-          //   console.log(json);
-          // });
         });
       }
     });
