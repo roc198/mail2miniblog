@@ -89,9 +89,10 @@ function publishWeibo(token,status,picPath,cb){
 }
 function friendsTimeline(token,recipient){
     weibo_api.statuses.friends_timeline(token, function(json){
-        process.nextTick(function(){
+        console.log(json);
+        if(json && json.statuses){
             sendMail(recipient,ejs.render(fs.readFileSync(path.join(__dirname,'views/friends_timeline.ejs') ,'utf8'),json));
-        });
+        }
     });
 }
 
