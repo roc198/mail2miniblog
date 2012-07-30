@@ -154,6 +154,7 @@ exports.startServer = function(){
           res.end('<ul>\
                 <li>绑定邮箱,请发邮件到 v@session.im (邮件 <b>主题</b> 必须为 access_token <b>邮件内容</b>可以为空)</li>\
                 <li>绑定邮箱后,发邮件到 t@session.im (邮件 <b>主题</b> 即为微博内容,<b>图片附件</b>会自动发布为微博图片. <b>邮件内容</b>可以为空)即可发布微博</li>\
+                <li>绑定邮箱后,发邮件到 l@session.im (邮件 <b>主题</b> 和 <b>邮件内容</b>均可以为空)即可查看微博feed列表(friends timeline)</li>\
             <ul>'.replace('access_token',data['access_token']));
         });
       }
