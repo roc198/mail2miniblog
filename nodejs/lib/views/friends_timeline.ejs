@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+		<meta charset="utf-8">
+		<title>friends_timeline</title>
+		<style>
+			.weibo {
+	          float: left;
+	          clear: left;
+	          padding: 10px;
+	          width: 483px;
+	          border: 1px solid #242424;
+	          margin-bottom: 10px; }
+	  
+	        span.text {
+	          float: left;
+	          display: inline;
+	          width: 400px;
+	          margin-left: 10px; }
+	        
+	        .retweeted_status {
+	          background: #cccccc;
+	          float: left;
+	          clear: left;
+	          padding: 10px;
+	          border: 1px solid #242424; }
+	        ul{
+				list-style-type:none;
+			}
+		</style>
+	</head>
+	<body>
+		<ul>
+			<% statuses.forEach(function(item){ %>
+				<li>
+					<div class='weibo'>
+						<span class='text'>
+							<a href='http://weibo.com/<%= item.user.id %>' target='_blank'> 
+								<%= item.user.screen_name %> 
+							</a>
+							<span> <%= item.text %> </span><br/>
+							<span> <%= item.created_at %> </span>
+						</span>
+					
+						<% if(item.retweeted_status){ %>
+							<div class='retweeted_status'>
+								<span class='text'>
+									<a href='http://weibo.com/<%= item.user.id %>' target='_blank'> 
+										<%= item.retweeted_status.user.screen_name %> 
+									</a>
+									<span> <%= item.retweeted_status.text %> </span><br/>
+									<span> <%= item.retweeted_status.created_at %> </span>
+									</span>
+							</div>
+						<% } %>
+					</div>
+				</li>
+			<% }) %>
+		</ul>	
+	</body>
+</html>
