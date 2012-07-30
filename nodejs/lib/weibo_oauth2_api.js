@@ -2,7 +2,6 @@ var https = require('https');
 var path = require('path');
 var fs = require('fs');
 var qs = require('querystring');
-var express = require('express');
 var multiparter = require("multiparter");
 
 function parse_json(res, callback) {
