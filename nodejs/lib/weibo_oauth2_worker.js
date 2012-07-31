@@ -8,12 +8,10 @@ var MailParser  = require("mailparser").MailParser;
 var redis = require("redis");
 var client = redis.createClient();
 
+ var config = require('./config');
+
 client.on("error", function (err) {
     console.error("redis connection Error " + err);
-});
-
-process.on('uncaughtException', function(err) {
-    console.error('Caught exception: ', err);
 });
     
 function mailParser(){
@@ -96,20 +94,21 @@ function friendsTimeline(token,recipient){
     });
 }
 
-function sendMail(to,html){
+function sendMail(to,html,text){
+    text = text || '';
     var smtpTransport = nodemailer.createTransport("SMTP",{
         service: "Gmail",
         auth: {
-            user: "mail2weibo@gmail.com",
-            pass: "mail2miniblogxxoo"//change it!
+            user: config.mail_name,
+            pass: config.mail_passwd
         }
     });
 
     var mailOptions = {
         from: "mail2weibo@gmail.com", 
         to: to, 
-        subject: "mail2weibo", 
-        text: "", 
+        subject: "friends timeline via mail2weibo", 
+        text: text, 
         html: html 
     }
 
@@ -134,7 +133,7 @@ function leftB(str, lens){
 
 exports.mailParser =  mailParser;
 exports.startServer = function(){
-    weibo_api.config('1869125062', 'd128d7a473c7a06ba0b84284a24c7924', 'http://mail2weibo.session.im/callback');
+    weibo_api.config(config.client_id, config.client_secret, config.redirect_uri);
     
     var app = express.createServer();
     app.use(app.router);
