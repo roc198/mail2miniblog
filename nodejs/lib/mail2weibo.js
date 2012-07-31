@@ -21,20 +21,16 @@ process.on('SIGTERM', function() {//for kill
 
 weibo_worker.startServer();
 
-var host = config.host;
-var validRecipient = ['v','t','l'].map(function(to){
-    return to + '@' + host;
-});
-
 var smtp = simplesmtp.createServer({
-    name : host,
+    name : config.host,
     debug : true,
     validateRecipients : true
 });
+
 smtp.listen(25);
 
 smtp.on('validateRecipient',function(envelope, email, callback){
-    if(validRecipient.indexOf(email) === -1){
+    if(config.validRecipient.indexOf(email) === -1){
         return callback(new Error('invalid recipient'));
     }
     callback(null);
