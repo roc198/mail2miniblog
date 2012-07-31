@@ -136,7 +136,7 @@ function leftB(str, lens){
 };
 
 exports.mailParser =  mailParser;
-exports.startServer = function(){
+exports.startHttpServer = function(){
     weibo_api.config(config.client_id, config.client_secret, config.redirect_uri);
     
     var app = express.createServer();
