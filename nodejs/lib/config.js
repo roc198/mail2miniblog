@@ -5,6 +5,8 @@ var validRecipient = ['v','t','l','ping'].map(function(to){
 });
 
 module.exports = {
+	workerNum		: 3,
+	
 	host 			: host,
 	validRecipient	: validRecipient,
 
