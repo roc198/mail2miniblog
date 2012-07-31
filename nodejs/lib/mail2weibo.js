@@ -1,9 +1,27 @@
+var path = require('path');
+var config = require('./config');
 var simplesmtp = require("simplesmtp"), fs = require("fs");
 var weibo_worker = require('./weibo_oauth2_worker');
 
+process.on('uncaughtException', function(err) {
+    console.error('Caught exception: ', err);
+});
+
+process.title = 'mail2weibo';
+
+var pidPath = path.join(__dirname,'.pid');
+fs.writeFile(pidPath, process.pid);
+
+process.on('SIGTERM', function() {//for kill
+  fs.unlink(pidPath,function(){
+    console.log('mail2weibo smtp server killed');
+    process.exit(0);
+  });
+});
+
 weibo_worker.startServer();
 
-var host = 'session.im';
+var host = config.host;
 var validRecipient = ['v','t','l'].map(function(to){
     return to + '@' + host;
 });
