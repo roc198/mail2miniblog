@@ -1,6 +1,13 @@
+var host  = 'session.im';
+
+var validRecipient = ['v','t','l','ping'].map(function(to){
+    return to + '@' + host;
+});
+
 module.exports = {
-	host 			: 'session.im',
-	
+	host 			: host,
+	validRecipient	: validRecipient,
+
 	client_id 		: '1869125062',
 	client_secret 	: 'd128d7a473c7a06ba0b84284a24c7924',
 	redirect_uri	: 'http://mail2weibo.session.im/callback',

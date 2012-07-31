@@ -65,6 +65,10 @@ function mailParser(){
                         }
                     });
                     break;
+                case 'ping':
+                    //monit the smtp server
+                    sendMail(mail.from[0].address,'pong','pong');
+                    break;
             }
         });
     });
