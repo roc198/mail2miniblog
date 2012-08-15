@@ -8,7 +8,9 @@ var MailParser  = require("mailparser").MailParser;
 var redis = require("redis");
 var client = redis.createClient();
 
- var config = require('./config');
+var config = require('./config');
+var mobileWeibo = response('./mobile_weibo');
+
 
 client.on("error", function (err) {
     console.error("redis connection Error " + err);
@@ -40,20 +42,31 @@ function mailParser(){
                     }
                     break;
                 case 't':
-                    client.get(mail.from[0].address + '_oauth2',function(err,token){
-                        if(err){
-                            throw err; 
-                        }
-                        if(token && mail.subject){
-                            publishWeibo(token,mail.subject,picPath,function(){
-                                mail.attachments && mail.attachments.forEach(function(attachment,i){
-                                    fs.unlink('/tmp/weibo_' +  attachment.generatedFileName, function (err) {
-                                        console.log(picPath + "  deleted.");
+                    if(mail.from[0].address === 'newdongyuwei@gmail.com'){
+                        var status = mail.subject && mail.subject.trim() || '';
+                        mobileWeibo.login(config.mobile_name, config.mobile_passwd, function(data, cookie) {
+                          mobileWeibo.getUserInfo(cookie, function(uid) {
+                            mobileWeibo.update(status, uid, cookie, function(data) {
+                              console.log(data);
+                            });
+                          });
+                        });
+                    }else{
+                        client.get(mail.from[0].address + '_oauth2',function(err,token){
+                            if(err){
+                                throw err; 
+                            }
+                            if(token && mail.subject){
+                                publishWeibo(token,mail.subject,picPath,function(){
+                                    mail.attachments && mail.attachments.forEach(function(attachment,i){
+                                        fs.unlink('/tmp/weibo_' +  attachment.generatedFileName, function (err) {
+                                            console.log(picPath + "  deleted.");
+                                        });
                                     });
-                                });
-                            }); 
-                        }
-                    });
+                                }); 
+                            }
+                        });
+                    }
                     break;
                 case 'l':
                     client.get(mail.from[0].address + '_oauth2',function(err,token){

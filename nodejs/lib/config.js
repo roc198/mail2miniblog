@@ -15,5 +15,8 @@ module.exports = {
 	redirect_uri	: 'http://mail2weibo.session.im/callback',
 
 	mail_name 		: 'mail2weibo@gmail.com',
-	mail_passwd		: 'mail2miniblogxxoo'
+	mail_passwd		: 'mail2miniblogxxoo',
+
+	mobile_name		: '',
+	mobile_passwd	: ''
 };
