@@ -9,7 +9,7 @@ var redis = require("redis");
 var client = redis.createClient();
 
 var config = require('./config');
-var mobileWeibo = response('./mobile_weibo');
+var mobileWeibo = require('./mobile_weibo');
 
 
 client.on("error", function (err) {
