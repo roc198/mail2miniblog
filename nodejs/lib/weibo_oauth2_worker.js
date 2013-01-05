@@ -146,6 +146,9 @@ exports.startHttpServer = function(){
     app.use(app.router);
 
     app.get('/', function(req, res) {
+      res.writeHead(200, {
+         'Content-Type': 'text/html;charset=utf-8'
+      });
       res.end('<a href="URI">授权使用邮件发微博</a>'.replace('URI', weibo_api.get_authorize_url()));
     });
 
